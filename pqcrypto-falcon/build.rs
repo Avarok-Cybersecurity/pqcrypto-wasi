@@ -10,6 +10,15 @@ macro_rules! build_clean {
         let common_dir = Path::new("pqclean/common");
 
         let mut builder = cc::Build::new();
+
+        println!("cargo:rerun-if-env-changed=OPENSSL_ROOT_DIR");
+        if let Ok(dir) = std::env::var("OPENSSL_ROOT_DIR") {
+            let dir = Path::new(&dir).join("lib");
+            println!("cargo:rustc-link-search={}", dir.display());
+        } else if cfg!(target_os = "windows") || cfg!(target_os = "macos") {
+            println!("cargo:warning=You may need to specify OPENSSL_ROOT_DIR");
+        }
+
         if env::var("CARGO_CFG_TARGET_OS").unwrap_or_default().as_str() == "wasi" {
             if env::var("CARGO_CFG_TARGET_ARCH")
                 .unwrap_or_default()
