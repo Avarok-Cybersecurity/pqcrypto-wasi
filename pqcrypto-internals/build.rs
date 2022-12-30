@@ -36,6 +36,15 @@ fn main() {
         build.flag(format!("--sysroot={}", wasi_sdk_path).as_str());
     }
 
+    println!("cargo:rerun-if-env-changed=OPENSSL_ROOT_DIR");
+    if let Ok(dir) = std::env::var("OPENSSL_ROOT_DIR") {
+        build.include(dir);
+        let dir = Path::new(&dir).join("lib");
+        println!("cargo:rustc-link-search={}", dir.display());
+    } else if cfg!(target_os = "windows") || cfg!(target_os = "macos") {
+        println!("cargo:warning=You may need to specify OPENSSL_ROOT_DIR");
+    }
+
     build
         .include(&includepath)
         .files(common_files.into_iter())
